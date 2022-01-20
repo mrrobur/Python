@@ -75,20 +75,6 @@ def score_model(Y_test, Y_pred, y_var, average_type=None):
 def evaluate_model(model, X_test, Y_test, category_names, average_type=None):
     Y_pred = model.predict(X_test)
     return score_model(Y_test, Y_pred, category_names, average_type=average_type)
-    #classification_report is only printing a string which is unredible, using precision_recall_fscore_support instead
-    # for col in zip(Y_test.T, Y_pred.T, category_names):
-    #     y_test, y_pred, var_name = col[0], col[1], col[2]
-    #     class_report=precision_recall_fscore_support(y_test, y_pred, average=average_type)
-    #
-    #     #precision, recall, f1, support = class_report
-    #     d = {
-    #         'precision': class_report[0],
-    #         'recall': class_report[1],
-    #         'f1-score': class_report[2],
-    #         'support': class_report[3]
-    #         }
-    #     results[var_name] = d
-    # return pd.DataFrame.from_dict(results, orient='index').drop('support', axis=1)
 
 def f1_mean(Y_test, Y_pred, category_names):
     return score_model(Y_test, Y_pred, category_names, 'macro').mean()['f1-score']
@@ -101,13 +87,11 @@ def build_model(category_names):
                 ('clf', MultiOutputClassifier(RandomForestClassifier()))
             ])
 
-    # parameters = {
-    #     'vect__ngram_range': [(1,1), (1,2)],
-    #     'clf__estimator__class_weight': [None,'balanced']
-    # }
     parameters = {
-        'vect__ngram_range': [(1,1)]
+        'vect__ngram_range': [(1,1), (1,2)],
+        'clf__estimator__class_weight': [None,'balanced']
     }
+
     f1_mean_score = make_scorer(f1_mean, category_names=category_names, greater_is_better=True)
     cv = GridSearchCV(pipeline, param_grid=parameters, scoring=f1_mean_score, verbose=4, cv=4, n_jobs=1)
     return cv
