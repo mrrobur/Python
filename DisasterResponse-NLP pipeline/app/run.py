@@ -8,7 +8,6 @@ from nltk.tokenize import word_tokenize
 from flask import Flask
 from flask import render_template, request, jsonify
 from plotly.graph_objs import Bar
-import pickle
 from sqlalchemy import create_engine
 
 
@@ -28,11 +27,11 @@ def tokenize(text):
 f1_mean = None
 
 # load data
-engine = create_engine('sqlite:///../data/ETLData.db')
+engine = create_engine('sqlite:///../data/DisasterResponse.db')
 df = pd.read_sql_table('Messages_Categories', engine)
 
 # load model
-model = joblib.load("../models/classifier3.pkl")
+model = joblib.load("../models/classifier.pkl")
 
 # index webpage displays cool visuals and receives user input text for model
 @app.route('/')
