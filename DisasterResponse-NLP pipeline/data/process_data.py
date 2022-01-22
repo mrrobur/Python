@@ -51,7 +51,7 @@ def save_data(df, database_filename):
     """
     try:
         engine = create_engine('sqlite:///'+database_filename)
-        df.to_sql('Messages_Categories', engine, index=False)
+        df.to_sql('Messages_Categories', engine, index=False, if_exists='replace')
         print('Cleaned data saved to database!')
     except Exception as e:
         print('Error saving a database:')
