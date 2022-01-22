@@ -19,6 +19,14 @@ import pickle
 
 
 def load_data(database_filepath):
+    """
+    Loads data from SQLlite. Drops Y columns where only one class occurs.
+    :param database_filepath: Database file path
+    :return:
+        X - independent variables
+        Y - dependent variables
+        y_var - ordered column names (possible classes) of Y
+    """
     # load data from database
     df = pd.read_sql_table('Messages_Categories', "sqlite:///"+database_filepath)
     drop_var = ['id','message','original','genre']
@@ -32,7 +40,12 @@ def load_data(database_filepath):
     Y = df[list(y_unique[y_unique>1].index)].values
     return X, Y, y_var
 
-def tokenize(text): 
+def tokenize(text):
+    """
+    Custom function that removes digits, URLs, stopwords, tokenize and lemmatize a sentence.
+    :param text: A sentence to tokenize
+    :return: Cleaned tokens
+    """
     text_only = r'[^A-Za-z]'
     url_regex = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
   
@@ -55,6 +68,14 @@ def tokenize(text):
     return clean_tokens
 
 def score_model(Y_test, Y_pred, y_var, average_type=None):
+    """
+    Calculates precision, recall and f1 of model
+    :param Y_test: Real value of dependent variable
+    :param Y_pred: Predicted value of dependent variable
+    :param y_var: list of Y column names
+    :param average_type: type of average used in f1 score a calculation
+    :return: pandas.Dataframe: scores for each Y class
+    """
     results = dict()
     # classification_report is only printing a string which is unredible, using precision_recall_fscore_support instead
     for col in zip(Y_test.T, Y_pred.T, y_var):
@@ -73,14 +94,35 @@ def score_model(Y_test, Y_pred, y_var, average_type=None):
 
 
 def evaluate_model(model, X_test, Y_test, category_names, average_type=None):
+    """
+    Predicts and then evaluates model
+    :param model: Trained model
+    :param X_test: Independent variables from test set
+    :param Y_test: Dependent variables from test set
+    :param category_names: names of categories of dependent variable
+    :param average_type: type of average used in f1 score a calculation
+    :return: pandas.Dataframe: scores for each Y class
+    """
     Y_pred = model.predict(X_test)
     return score_model(Y_test, Y_pred, category_names, average_type=average_type)
 
 def f1_mean(Y_test, Y_pred, category_names):
+    """
+    Wrapper function that return only an average of f1-score for all predicted classes
+    :param Y_test: Dependent variables from test set
+    :param Y_pred: Indpendent variables from test set
+    :param category_names: names of categories of dependent variable
+    :return: float: average f1-score for all classes
+    """
     return score_model(Y_test, Y_pred, category_names, 'macro').mean()['f1-score']
 
 
 def build_model(category_names):
+    """
+    Build a whole pipeline for training the model and uses GridSearch to find optimal parameters
+    :param category_names: names of categories of dependent variable
+    :return: GridSearchCV object: best found model evaluated towards mean f1-score
+    """
     pipeline = Pipeline([
                 ('vect', CountVectorizer(tokenizer=tokenize)),
                 ('tfidf', TfidfTransformer()),
@@ -97,6 +139,12 @@ def build_model(category_names):
     return cv
 
 def save_model(model, model_filepath):
+    """
+    Saves model to pickle in given path
+    :param model: Trained model
+    :param model_filepath: Destination and pickled file name
+    :return: None
+    """
     pickle.dump(model, open(model_filepath, 'wb'))
     return None
 
